@@ -4,6 +4,13 @@ import 'package:ruword/controllers/game_controller.dart';
 import 'package:ruword/controllers/theme_controller.dart';
 
 class GamePage extends StatelessWidget {
+  static const double _keyboardHeight = 180.0;
+  static const List<String> _keyboardLayout = [
+    "й ц у к е н г ш щ з х ъ",
+    "empty ф ы в а п р о л д ж э backspace",
+    "empty empty я ч с м и т ь б ю empty done",
+  ];
+
   final GameController gameController;
 
   GamePage({Key? key})
@@ -48,16 +55,11 @@ class GamePage extends StatelessWidget {
   }
 
   Widget _buildKeyboard() {
-    const List<String> lettersLayout = [
-      "й ц у к е н г ш щ з х ъ",
-      "empty ф ы в а п р о л д ж э backspace",
-      "empty empty я ч с м и т ь б ю empty done",
-    ];
     return Material(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
-        children: lettersLayout
+        children: _keyboardLayout
             .map(
               (row) => Row(
                 children: row.split(' ').map(
@@ -117,17 +119,17 @@ class GamePage extends StatelessWidget {
       flex = 3;
     }
     return Expanded(
-        flex: flex,
-        child: SizedBox(
-          height: 58,
-          child: InkResponse(
-            splashFactory: InkSparkle.splashFactory,
-            radius: 16,
-            onTap: onPressed,
-            onLongPress: onLongPress,
-            child: Center(child: child),
-          ),
+      flex: flex,
+      child: SizedBox(
+        height: _keyboardHeight / _keyboardLayout.length,
+        child: InkResponse(
+          splashFactory: InkSparkle.splashFactory,
+          radius: 16,
+          onTap: onPressed,
+          onLongPress: onLongPress,
+          child: Center(child: child),
         ),
-      );
+      ),
+    );
   }
 }
