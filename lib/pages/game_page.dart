@@ -48,8 +48,8 @@ class GamePage extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Text(gameController.secretWord),
-        Text(gameController.userWord.value),
+        _buildWordRow(gameController.secretWord),
+        _buildWordRow(gameController.userWord.value),
       ],
     );
   }
@@ -128,6 +128,34 @@ class GamePage extends StatelessWidget {
           onTap: onPressed,
           onLongPress: onLongPress,
           child: Center(child: child),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWordRow(String text) {
+    final squareSize =
+        Get.mediaQuery.size.width / gameController.wordLength * 0.75;
+    text.padRight(gameController.wordLength);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children:
+          text.characters.map((e) => _buildWordSquare(e, squareSize)).toList(),
+    );
+  }
+
+  Widget _buildWordSquare(String letter, double size) {
+    return Container(
+      width: size,
+      height: size,
+      margin: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey),
+      ),
+      child: Center(
+        child: Text(
+          letter,
+          style: TextStyle(fontSize: size/2),
         ),
       ),
     );
