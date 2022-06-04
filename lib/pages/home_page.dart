@@ -18,8 +18,12 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Text('Hello world!'),
+      body: Center(
+        child: ElevatedButton.icon(
+          icon: const Icon(Icons.play_arrow),
+          label: const Text('Играть'),
+          onPressed: () => Get.toNamed('/game'),
+        ),
       ),
     );
   }
