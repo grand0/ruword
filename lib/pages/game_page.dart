@@ -50,8 +50,8 @@ class GamePage extends StatelessWidget {
   Widget _buildKeyboard() {
     const List<String> lettersLayout = [
       "й ц у к е н г ш щ з х ъ",
-      "ф ы в а п р о л д ж э backspace",
-      "я ч с м и т ь б ю done",
+      "empty ф ы в а п р о л д ж э backspace",
+      "empty empty я ч с м и т ь б ю empty done",
     ];
     return Material(
       child: Column(
@@ -62,11 +62,13 @@ class GamePage extends StatelessWidget {
               (row) => Row(
                 children: row.split(' ').map(
                   (letter) {
-                    Widget child;
+                    Widget? child;
                     if (letter == 'backspace') {
                       child = const Icon(Icons.backspace_outlined);
                     } else if (letter == 'done') {
                       child = const Icon(Icons.check);
+                    } else if (letter == 'empty') {
+                      child = null;
                     } else {
                       child = Text(
                         letter,
@@ -75,21 +77,24 @@ class GamePage extends StatelessWidget {
                     }
                     return _buildKeyboardButton(
                       child: child,
-                      onPressed: () {
-                        String word = gameController.userWord.value;
-                        if (letter == 'backspace') {
-                          if (word.isNotEmpty) {
-                            word = word.substring(0, word.length - 1);
-                          }
-                        } else if (letter == 'done') {
-                          if (word.length == gameController.wordLength) {
-                            gameController.checkWord();
-                          }
-                        } else if (word.length < gameController.wordLength) {
-                          word += letter;
-                        }
-                        gameController.userWord.value = word;
-                      },
+                      onPressed: letter != 'empty'
+                          ? () {
+                              String word = gameController.userWord.value;
+                              if (letter == 'backspace') {
+                                if (word.isNotEmpty) {
+                                  word = word.substring(0, word.length - 1);
+                                }
+                              } else if (letter == 'done') {
+                                if (word.length == gameController.wordLength) {
+                                  gameController.checkWord();
+                                }
+                              } else if (word.length <
+                                  gameController.wordLength) {
+                                word += letter;
+                              }
+                              gameController.userWord.value = word;
+                            }
+                          : null,
                     );
                   },
                 ).toList(),
@@ -101,14 +106,20 @@ class GamePage extends StatelessWidget {
   }
 
   Widget _buildKeyboardButton({
-    required Widget child,
-    required void Function() onPressed,
+    Widget? child,
+    void Function()? onPressed,
     void Function()? onLongPress,
-  }) =>
-      Expanded(
-        flex: child is Text ? 2 : 3,
+  }) {
+    int flex = 1;
+    if (child is Text) {
+      flex = 2;
+    } else if (child is Icon) {
+      flex = 3;
+    }
+    return Expanded(
+        flex: flex,
         child: SizedBox(
-          height: 64,
+          height: 58,
           child: InkResponse(
             splashFactory: InkSparkle.splashFactory,
             radius: 16,
@@ -118,4 +129,5 @@ class GamePage extends StatelessWidget {
           ),
         ),
       );
+  }
 }
