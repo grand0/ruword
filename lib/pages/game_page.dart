@@ -49,7 +49,7 @@ class GamePage extends StatelessWidget {
                 return Container();
             }
           })),
-          _buildKeyboard(),
+          Obx(() => _buildKeyboard()),
         ],
       ),
     );
@@ -62,7 +62,7 @@ class GamePage extends StatelessWidget {
     for (int i = 0; i < gameController.totalAttempts; i++) {
       if (i < userAttempts.length) {
         final List<LetterState> states =
-            gameController.getLetterStates(userAttempts[i]);
+            gameController.getLetterStatesFromWord(userAttempts[i]);
         final List<Color> colors = states.map((state) {
           switch (state) {
             case LetterState.allRight:
@@ -99,6 +99,23 @@ class GamePage extends StatelessWidget {
               (row) => Row(
                 children: row.split(' ').map(
                   (letter) {
+                    Color? color;
+                    if (letter.length == 1) {
+                      switch (gameController.getLetterState(letter)) {
+                        case LetterState.allWrong:
+                          color = Colors.red;
+                          break;
+                        case LetterState.wrongPlace:
+                          color = Colors.yellow;
+                          break;
+                        case LetterState.allRight:
+                          color = Colors.green;
+                          break;
+                        case null:
+                          color = null;
+                          break;
+                      }
+                    }
                     Widget? child;
                     if (letter == 'backspace') {
                       child = const Icon(Icons.backspace_outlined);
@@ -109,11 +126,12 @@ class GamePage extends StatelessWidget {
                     } else {
                       child = Text(
                         letter,
-                        style: const TextStyle(fontSize: 18),
+                        style: TextStyle(fontSize: 18, color: color),
                       );
                     }
                     return _buildKeyboardButton(
                       child: child,
+                      backgroundColor: color,
                       onPressed: letter != 'empty'
                           ? () {
                               String word = gameController.userWord.value;
@@ -177,6 +195,7 @@ class GamePage extends StatelessWidget {
     Widget? child,
     void Function()? onPressed,
     void Function()? onLongPress,
+    Color? backgroundColor,
   }) {
     int flex = 1;
     if (child is Text) {
@@ -186,8 +205,12 @@ class GamePage extends StatelessWidget {
     }
     return Expanded(
       flex: flex,
-      child: SizedBox(
+      child: Container(
         height: _keyboardHeight / _keyboardLayout.length,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: backgroundColor?.withAlpha(63),
+        ),
         child: InkResponse(
           splashFactory: InkSparkle.splashFactory,
           radius: 16,

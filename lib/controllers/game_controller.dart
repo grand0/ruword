@@ -60,7 +60,7 @@ class GameController extends GetxController with StateMixin<GameState> {
     return CheckWordState.ok;
   }
 
-  List<LetterState> getLetterStates(String word) {
+  List<LetterState> getLetterStatesFromWord(String word) {
     assert(word.length == secretWord.length);
     List<LetterState> states = [];
     for (int i = 0; i < word.length; i++) {
@@ -73,6 +73,24 @@ class GameController extends GetxController with StateMixin<GameState> {
       }
     }
     return states;
+  }
+
+  LetterState? getLetterState(String letter) {
+    assert(letter.length == 1);
+    LetterState? state;
+    for (int i = userAttempts.length - 1; i >= 0; i--) {
+      final word = userAttempts[i];
+      final states = getLetterStatesFromWord(word);
+      for (int j = 0; j < word.length; j++) {
+        if (word[j] == letter) {
+          state = states[j];
+        }
+        if (state == LetterState.allRight || state == LetterState.allWrong) {
+          return state;
+        }
+      }
+    }
+    return state;
   }
 }
 
