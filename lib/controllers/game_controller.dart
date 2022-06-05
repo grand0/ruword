@@ -39,12 +39,12 @@ class GameController extends GetxController with StateMixin<GameState> {
     return allWords[Random().nextInt(allWords.length)];
   }
 
-  void checkWord() {
+  CheckWordState checkWord() {
+    if (userWord.value.length != wordLength) {
+      return CheckWordState.notFull;
+    }
     if (!allWords.contains(userWord.value)) {
-      if (kDebugMode) {
-        print('no such word');
-      }
-      return;
+      return CheckWordState.notExists;
     }
 
     userAttempts.add(userWord.value);
@@ -57,6 +57,7 @@ class GameController extends GetxController with StateMixin<GameState> {
       }
     }
     userWord.value = '';
+    return CheckWordState.ok;
   }
 
   List<LetterState> getLetterStates(String word) {
@@ -78,3 +79,5 @@ class GameController extends GetxController with StateMixin<GameState> {
 enum GameState { loading, running, win, lose }
 
 enum LetterState { allWrong, wrongPlace, allRight }
+
+enum CheckWordState { ok, notExists, notFull }

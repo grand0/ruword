@@ -1,3 +1,4 @@
+import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ruword/controllers/game_controller.dart';
@@ -122,8 +123,38 @@ class GamePage extends StatelessWidget {
                                   gameController.userWord.value = word;
                                 }
                               } else if (letter == 'done') {
-                                if (word.length == gameController.wordLength) {
-                                  gameController.checkWord();
+                                final state = gameController.checkWord();
+                                switch (state) {
+                                  case CheckWordState.ok:
+                                    break;
+                                  case CheckWordState.notExists:
+                                    Flushbar(
+                                      message: 'Такого слова нет в словаре!',
+                                      flushbarPosition: FlushbarPosition.TOP,
+                                      duration: const Duration(seconds: 2),
+                                      animationDuration:
+                                          const Duration(milliseconds: 500),
+                                      leftBarIndicatorColor: Colors.red,
+                                      icon: const Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                      ),
+                                    ).show(Get.context!);
+                                    break;
+                                  case CheckWordState.notFull:
+                                    Flushbar(
+                                      message: 'Введите слово полностью!',
+                                      flushbarPosition: FlushbarPosition.TOP,
+                                      duration: const Duration(seconds: 2),
+                                      animationDuration:
+                                          const Duration(milliseconds: 500),
+                                      leftBarIndicatorColor: Colors.red,
+                                      icon: const Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                      ),
+                                    ).show(Get.context!);
+                                    break;
                                 }
                               } else if (word.length <
                                   gameController.wordLength) {
