@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 class GameController extends GetxController with StateMixin<GameState> {
   final int wordLength;
   final int totalAttempts;
+  late final List<String> allWords;
   late final String secretWord;
   var userWord = ''.obs;
   var userAttempts = <String>[].obs;
@@ -18,21 +19,24 @@ class GameController extends GetxController with StateMixin<GameState> {
   void onInit() {
     change(GameState.loading, status: RxStatus.success());
     super.onInit();
-    _getRandomWord().then((word) {
-      secretWord = word;
-      change(GameState.running, status: RxStatus.success());
+    _loadAllWords().whenComplete(() {
+      secretWord = _getRandomWord();
+      change(GameState.running);
       if (kDebugMode) {
         print(secretWord);
       }
     });
   }
 
-  Future<String> _getRandomWord() async {
+  Future<void> _loadAllWords() async {
     final contents =
         await rootBundle.loadString('assets/words/words_$wordLength.txt');
-    final words = contents.split('\r\n');
-    words.removeWhere((element) => (element == ''));
-    return words[Random().nextInt(words.length)];
+    allWords = contents.split('\r\n');
+    allWords.removeWhere((element) => (element == ''));
+  }
+
+  String _getRandomWord() {
+    return allWords[Random().nextInt(allWords.length)];
   }
 
   void checkWord() {
