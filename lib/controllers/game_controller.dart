@@ -40,6 +40,13 @@ class GameController extends GetxController with StateMixin<GameState> {
   }
 
   void checkWord() {
+    if (!allWords.contains(userWord.value)) {
+      if (kDebugMode) {
+        print('no such word');
+      }
+      return;
+    }
+
     userAttempts.add(userWord.value);
     if (userWord.value == secretWord) {
       change(GameState.win);
