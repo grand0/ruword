@@ -33,11 +33,20 @@ class GamePage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: Obx(() => gameController.isReady.value
-                ? _buildGameWidget()
-                : const Center(child: CircularProgressIndicator())),
-          ),
+          Expanded(child: gameController.obx((state) {
+            switch (state) {
+              case GameState.loading:
+                return const Center(child: CircularProgressIndicator());
+              case GameState.running:
+                return Obx(() => _buildGameWidget());
+              case GameState.win:
+                return const Center(child: Text('You win!'));
+              case GameState.lose:
+                return const Center(child: Text('You lose!'));
+              case null:
+                return Container();
+            }
+          })),
           _buildKeyboard(),
         ],
       ),
@@ -45,12 +54,23 @@ class GamePage extends StatelessWidget {
   }
 
   Widget _buildGameWidget() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildWordRow(gameController.secretWord),
-        _buildWordRow(gameController.userWord.value),
-      ],
+    final userAttemptsWithEmptyRows = gameController.userAttempts.toList();
+    for (int i = 0;
+        i < gameController.totalAttempts - gameController.currentAttempt.value;
+        i++) {
+      if (i == 0) {
+        userAttemptsWithEmptyRows.add(gameController.userWord.value);
+      } else {
+        userAttemptsWithEmptyRows.add('');
+      }
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children:
+            userAttemptsWithEmptyRows.map((e) => _buildWordRow(e)).toList(),
+      ),
     );
   }
 
@@ -85,6 +105,7 @@ class GamePage extends StatelessWidget {
                               if (letter == 'backspace') {
                                 if (word.isNotEmpty) {
                                   word = word.substring(0, word.length - 1);
+                                  gameController.userWord.value = word;
                                 }
                               } else if (letter == 'done') {
                                 if (word.length == gameController.wordLength) {
@@ -93,8 +114,8 @@ class GamePage extends StatelessWidget {
                               } else if (word.length <
                                   gameController.wordLength) {
                                 word += letter;
+                                gameController.userWord.value = word;
                               }
-                              gameController.userWord.value = word;
                             }
                           : null,
                     );
@@ -136,7 +157,7 @@ class GamePage extends StatelessWidget {
   Widget _buildWordRow(String text) {
     final squareSize =
         Get.mediaQuery.size.width / gameController.wordLength * 0.75;
-    text.padRight(gameController.wordLength);
+    text = text.padRight(gameController.wordLength);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children:
@@ -155,7 +176,7 @@ class GamePage extends StatelessWidget {
       child: Center(
         child: Text(
           letter,
-          style: TextStyle(fontSize: size/2),
+          style: TextStyle(fontSize: size / 2),
         ),
       ),
     );

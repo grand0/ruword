@@ -4,20 +4,26 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-class GameController extends GetxController {
+class GameController extends GetxController with StateMixin<GameState> {
   final int wordLength;
+  final int totalAttempts;
   late final String secretWord;
   var userWord = ''.obs;
-  var isReady = false.obs;
+  var userAttempts = <String>[].obs;
+  var currentAttempt = 0.obs;
 
-  GameController({required this.wordLength});
+  GameController({required this.wordLength}) : totalAttempts = wordLength + 1;
 
   @override
   void onInit() {
+    change(GameState.loading, status: RxStatus.success());
     super.onInit();
     _getRandomWord().then((word) {
       secretWord = word;
-      isReady.value = true;
+      change(GameState.running, status: RxStatus.success());
+      if (kDebugMode) {
+        print(secretWord);
+      }
     });
   }
 
@@ -30,8 +36,17 @@ class GameController extends GetxController {
   }
 
   void checkWord() {
-    if (kDebugMode) {
-      print(secretWord == userWord.value);
+    userAttempts.add(userWord.value);
+    if (userWord.value == secretWord) {
+      change(GameState.win);
+    } else {
+      currentAttempt++;
+      if (currentAttempt.value == totalAttempts) {
+        change(GameState.lose);
+      }
     }
+    userWord.value = '';
   }
 }
+
+enum GameState { loading, running, win, lose }
