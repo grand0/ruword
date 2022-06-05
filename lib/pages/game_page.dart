@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ruword/controllers/game_controller.dart';
 import 'package:ruword/controllers/theme_controller.dart';
+import 'package:ruword/theme.dart' as theme;
 
 class GamePage extends StatelessWidget {
   static const double _keyboardHeight = 180.0;
@@ -54,22 +55,35 @@ class GamePage extends StatelessWidget {
   }
 
   Widget _buildGameWidget() {
-    final userAttemptsWithEmptyRows = gameController.userAttempts.toList();
-    for (int i = 0;
-        i < gameController.totalAttempts - gameController.currentAttempt.value;
-        i++) {
-      if (i == 0) {
-        userAttemptsWithEmptyRows.add(gameController.userWord.value);
+    final isLightTheme = Get.find<ThemeController>().isLightTheme.value;
+    final userAttempts = gameController.userAttempts.toList();
+    List<Widget> rows = [];
+    for (int i = 0; i < gameController.totalAttempts; i++) {
+      if (i < userAttempts.length) {
+        final List<LetterState> states =
+            gameController.getLetterStates(userAttempts[i]);
+        final List<Color> colors = states.map((state) {
+          switch (state) {
+            case LetterState.allRight:
+              return isLightTheme ? theme.greenLight : theme.greenDark;
+            case LetterState.wrongPlace:
+              return isLightTheme ? theme.yellowLight : theme.yellowDark;
+            case LetterState.allWrong:
+              return isLightTheme ? theme.redLight : theme.redDark;
+          }
+        }).toList();
+        rows.add(_buildWordRow(userAttempts[i], colors: colors));
+      } else if (i == userAttempts.length) {
+        rows.add(_buildWordRow(gameController.userWord.value));
       } else {
-        userAttemptsWithEmptyRows.add('');
+        rows.add(_buildWordRow(''));
       }
     }
 
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children:
-            userAttemptsWithEmptyRows.map((e) => _buildWordRow(e)).toList(),
+        children: rows,
       ),
     );
   }
@@ -154,24 +168,31 @@ class GamePage extends StatelessWidget {
     );
   }
 
-  Widget _buildWordRow(String text) {
+  Widget _buildWordRow(String text, {List<Color>? colors}) {
+    if (colors != null) {
+      assert(colors.length == gameController.wordLength);
+    }
     final squareSize =
         Get.mediaQuery.size.width / gameController.wordLength * 0.75;
     text = text.padRight(gameController.wordLength);
+    List<Widget> squares = [];
+    for (int i = 0; i < gameController.wordLength; i++) {
+      squares.add(_buildWordSquare(text[i], squareSize, colors?[i]));
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children:
-          text.characters.map((e) => _buildWordSquare(e, squareSize)).toList(),
+      children: squares,
     );
   }
 
-  Widget _buildWordSquare(String letter, double size) {
+  Widget _buildWordSquare(String letter, double size, [Color? color]) {
     return Container(
       width: size,
       height: size,
       margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),
+        color: color,
       ),
       child: Center(
         child: Text(

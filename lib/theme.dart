@@ -14,9 +14,9 @@ final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
 );
 
-const redLight = Colors.red;
-final redDark = Colors.red.shade800;
-const yellowLight = Colors.yellow;
-final yellowDark = Colors.yellow.shade800;
-const greenLight = Colors.green;
-final greenDark = Colors.green.shade800;
+final redLight = Colors.red.shade400;
+final redDark = Colors.red.shade900;
+final yellowLight = Colors.yellow.shade400;
+final yellowDark = Colors.yellow.shade900;
+final greenLight = Colors.green.shade400;
+final greenDark = Colors.green.shade900;

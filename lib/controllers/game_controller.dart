@@ -58,6 +58,23 @@ class GameController extends GetxController with StateMixin<GameState> {
     }
     userWord.value = '';
   }
+
+  List<LetterState> getLetterStates(String word) {
+    assert(word.length == secretWord.length);
+    List<LetterState> states = [];
+    for (int i = 0; i < word.length; i++) {
+      if (word[i] == secretWord[i]) {
+        states.add(LetterState.allRight);
+      } else if (secretWord.contains(word[i])) {
+        states.add(LetterState.wrongPlace);
+      } else {
+        states.add(LetterState.allWrong);
+      }
+    }
+    return states;
+  }
 }
 
 enum GameState { loading, running, win, lose }
+
+enum LetterState { allWrong, wrongPlace, allRight }
