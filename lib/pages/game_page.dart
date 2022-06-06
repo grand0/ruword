@@ -249,6 +249,11 @@ class GamePage extends StatelessWidget {
                               }
                             }
                           : null,
+                      onLongPress: letter == 'backspace'
+                          ? () {
+                              gameController.userWord.value = '';
+                            }
+                          : null,
                     );
                   },
                 ).toList(),
