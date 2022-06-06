@@ -79,12 +79,14 @@ class GamePage extends StatelessWidget {
               text: gameController.secretWord,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            const TextSpan(text: '\n'),
-            const TextSpan(text: 'Попыток: '),
-            TextSpan(
-              text: '${gameController.currentAttempt.value + 1}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            if (win) ...[
+              const TextSpan(text: '\n'),
+              const TextSpan(text: 'Попыток: '),
+              TextSpan(
+                text: '${gameController.currentAttempt.value + 1}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ]
           ],
         ),
       ),
