@@ -66,11 +66,17 @@ class GamePage extends StatelessWidget {
         final List<Color> colors = states.map((state) {
           switch (state) {
             case LetterState.allRight:
-              return isLightTheme ? theme.greenLight : theme.greenDark;
+              return isLightTheme
+                  ? theme.greenLight.withAlpha(127)
+                  : theme.greenDark.withAlpha(127);
             case LetterState.wrongPlace:
-              return isLightTheme ? theme.yellowLight : theme.yellowDark;
+              return isLightTheme
+                  ? theme.yellowLight.withAlpha(127)
+                  : theme.yellowDark.withAlpha(127);
             case LetterState.allWrong:
-              return isLightTheme ? theme.redLight : theme.redDark;
+              return isLightTheme
+                  ? theme.redLight.withAlpha(127)
+                  : theme.redDark.withAlpha(127);
           }
         }).toList();
         rows.add(_buildWordRow(userAttempts[i], colors: colors));
@@ -100,16 +106,24 @@ class GamePage extends StatelessWidget {
                 children: row.split(' ').map(
                   (letter) {
                     Color? color;
+                    final isLightTheme =
+                        Get.find<ThemeController>().isLightTheme.value;
                     if (letter.length == 1) {
                       switch (gameController.getLetterState(letter)) {
-                        case LetterState.allWrong:
-                          color = Colors.red;
+                        case LetterState.allRight:
+                          color = isLightTheme
+                              ? theme.greenLight.withAlpha(127)
+                              : theme.greenDark.withAlpha(127);
                           break;
                         case LetterState.wrongPlace:
-                          color = Colors.yellow;
+                          color = isLightTheme
+                              ? theme.yellowLight.withAlpha(127)
+                              : theme.yellowDark.withAlpha(127);
                           break;
-                        case LetterState.allRight:
-                          color = Colors.green;
+                        case LetterState.allWrong:
+                          color = isLightTheme
+                              ? theme.redLight.withAlpha(127)
+                              : theme.redDark.withAlpha(127);
                           break;
                         case null:
                           color = null;
@@ -126,7 +140,7 @@ class GamePage extends StatelessWidget {
                     } else {
                       child = Text(
                         letter,
-                        style: TextStyle(fontSize: 18, color: color),
+                        style: const TextStyle(fontSize: 18),
                       );
                     }
                     return _buildKeyboardButton(
@@ -209,7 +223,7 @@ class GamePage extends StatelessWidget {
         height: _keyboardHeight / _keyboardLayout.length,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: backgroundColor?.withAlpha(63),
+          color: backgroundColor,
         ),
         child: InkResponse(
           splashFactory: InkSparkle.splashFactory,
