@@ -92,8 +92,8 @@ class GamePage extends StatelessWidget {
         child: const Text('Сыграть ещё'),
         onPressed: () {
           bottomFlushbar?.dismiss();
-          WidgetsBinding.instance
-              .addPostFrameCallback((_) => Get.offAndToNamed('/game'));
+          WidgetsBinding.instance.addPostFrameCallback((_) =>
+              Get.offAndToNamed('/game', arguments: gameController.wordLength));
         },
       ),
       duration: null,
