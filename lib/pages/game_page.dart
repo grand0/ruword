@@ -14,10 +14,12 @@ class GamePage extends StatelessWidget {
   ];
 
   final GameController gameController;
+  Flushbar? bottomFlushbar;
 
   GamePage({Key? key})
-      : gameController =
-            Get.put(GameController(wordLength: Get.arguments as int? ?? 5)),
+      : gameController = Get.put(
+            GameController(wordLength: Get.arguments as int? ?? 5),
+            tag: DateTime.now().millisecondsSinceEpoch.toString()),
         super(key: key);
 
   @override
@@ -42,9 +44,79 @@ class GamePage extends StatelessWidget {
               case GameState.running:
                 return Obx(() => _buildGameWidget());
               case GameState.win:
-                return const Center(child: Text('You win!'));
+                bottomFlushbar ??= Flushbar(
+                  icon: const Icon(
+                    Icons.emoji_events_outlined,
+                    color: Colors.yellow,
+                  ),
+                  leftBarIndicatorColor: Colors.yellow,
+                  title: 'Вы победили!',
+                  messageText: RichText(
+                    text: TextSpan(
+                      children: [
+                        const TextSpan(text: 'Загаданное слово: '),
+                        TextSpan(
+                          text: gameController.secretWord,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const TextSpan(text: '\n'),
+                        const TextSpan(text: 'Попыток: '),
+                        TextSpan(
+                          text: '${gameController.currentAttempt.value + 1}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  mainButton: TextButton(
+                    child: const Text('Сыграть ещё'),
+                    onPressed: () {
+                      bottomFlushbar?.dismiss();
+                      WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => Get.offAndToNamed('/game'));
+                    },
+                  ),
+                  duration: null,
+                  isDismissible: false,
+                  animationDuration: const Duration(milliseconds: 500),
+                );
+                WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => bottomFlushbar?.show(Get.context!));
+                return _buildGameWidget();
               case GameState.lose:
-                return const Center(child: Text('You lose!'));
+                bottomFlushbar ??= Flushbar(
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.blueGrey,
+                  ),
+                  leftBarIndicatorColor: Colors.blueGrey,
+                  title: 'Вы проиграли',
+                  messageText: RichText(
+                    text: TextSpan(
+                      children: [
+                        const TextSpan(text: 'Загаданное слово: '),
+                        TextSpan(
+                          text: gameController.secretWord,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  mainButton: TextButton(
+                    child: const Text('Сыграть ещё'),
+                    onPressed: () {
+                      bottomFlushbar?.dismiss();
+                      WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => Get.offAndToNamed('/game'));
+                    },
+                  ),
+                  duration: null,
+                  isDismissible: false,
+                  animationDuration: const Duration(milliseconds: 500),
+                );
+                WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => bottomFlushbar?.show(Get.context!));
+                return _buildGameWidget();
               case null:
                 return Container();
             }
@@ -148,6 +220,9 @@ class GamePage extends StatelessWidget {
                       backgroundColor: color,
                       onPressed: letter != 'empty'
                           ? () {
+                              if (gameController.state != GameState.running) {
+                                return;
+                              }
                               String word = gameController.userWord.value;
                               if (letter == 'backspace') {
                                 if (word.isNotEmpty) {
