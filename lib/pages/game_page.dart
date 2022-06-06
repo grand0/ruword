@@ -44,78 +44,10 @@ class GamePage extends StatelessWidget {
               case GameState.running:
                 return Obx(() => _buildGameWidget());
               case GameState.win:
-                bottomFlushbar ??= Flushbar(
-                  icon: const Icon(
-                    Icons.emoji_events_outlined,
-                    color: Colors.yellow,
-                  ),
-                  leftBarIndicatorColor: Colors.yellow,
-                  title: 'Вы победили!',
-                  messageText: RichText(
-                    text: TextSpan(
-                      children: [
-                        const TextSpan(text: 'Загаданное слово: '),
-                        TextSpan(
-                          text: gameController.secretWord,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const TextSpan(text: '\n'),
-                        const TextSpan(text: 'Попыток: '),
-                        TextSpan(
-                          text: '${gameController.currentAttempt.value + 1}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  mainButton: TextButton(
-                    child: const Text('Сыграть ещё'),
-                    onPressed: () {
-                      bottomFlushbar?.dismiss();
-                      WidgetsBinding.instance.addPostFrameCallback(
-                          (_) => Get.offAndToNamed('/game'));
-                    },
-                  ),
-                  duration: null,
-                  isDismissible: false,
-                  animationDuration: const Duration(milliseconds: 500),
-                );
-                WidgetsBinding.instance.addPostFrameCallback(
-                    (_) => bottomFlushbar?.show(Get.context!));
+                _showGameOverFlushbar(true);
                 return _buildGameWidget();
               case GameState.lose:
-                bottomFlushbar ??= Flushbar(
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.blueGrey,
-                  ),
-                  leftBarIndicatorColor: Colors.blueGrey,
-                  title: 'Вы проиграли',
-                  messageText: RichText(
-                    text: TextSpan(
-                      children: [
-                        const TextSpan(text: 'Загаданное слово: '),
-                        TextSpan(
-                          text: gameController.secretWord,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  mainButton: TextButton(
-                    child: const Text('Сыграть ещё'),
-                    onPressed: () {
-                      bottomFlushbar?.dismiss();
-                      WidgetsBinding.instance.addPostFrameCallback(
-                          (_) => Get.offAndToNamed('/game'));
-                    },
-                  ),
-                  duration: null,
-                  isDismissible: false,
-                  animationDuration: const Duration(milliseconds: 500),
-                );
-                WidgetsBinding.instance.addPostFrameCallback(
-                    (_) => bottomFlushbar?.show(Get.context!));
+                _showGameOverFlushbar(false);
                 return _buildGameWidget();
               case null:
                 return Container();
@@ -125,6 +57,51 @@ class GamePage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _showGameOverFlushbar(bool win) {
+    Color color = win ? Colors.yellow : Colors.blueGrey;
+    Icon icon = Icon(
+      win ? Icons.emoji_events_outlined : Icons.close,
+      color: color,
+    );
+    String title = win ? 'Вы выиграли!' : 'Вы проиграли!';
+    bottomFlushbar?.dismiss();
+    bottomFlushbar = Flushbar(
+      icon: icon,
+      leftBarIndicatorColor: color,
+      title: title,
+      messageText: RichText(
+        text: TextSpan(
+          children: [
+            const TextSpan(text: 'Загаданное слово: '),
+            TextSpan(
+              text: gameController.secretWord,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(text: '\n'),
+            const TextSpan(text: 'Попыток: '),
+            TextSpan(
+              text: '${gameController.currentAttempt.value + 1}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+      mainButton: TextButton(
+        child: const Text('Сыграть ещё'),
+        onPressed: () {
+          bottomFlushbar?.dismiss();
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => Get.offAndToNamed('/game'));
+        },
+      ),
+      duration: null,
+      isDismissible: false,
+      animationDuration: const Duration(milliseconds: 500),
+    );
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => bottomFlushbar?.show(Get.context!));
   }
 
   Widget _buildGameWidget() {
