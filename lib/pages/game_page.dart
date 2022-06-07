@@ -6,6 +6,8 @@ import 'package:ruword/controllers/theme_controller.dart';
 import 'package:ruword/theme.dart' as theme;
 
 class GamePage extends StatelessWidget {
+  static const double _widthLimit = 600.0;
+
   static const double _keyboardHeight = 180.0;
   static const List<String> _keyboardLayout = [
     "й ц у к е н г ш щ з х ъ",
@@ -35,26 +37,33 @@ class GamePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(child: gameController.obx((state) {
-            switch (state) {
-              case GameState.loading:
-                return const Center(child: CircularProgressIndicator());
-              case GameState.running:
-                return Obx(() => _buildGameWidget(context));
-              case GameState.win:
-                _showGameOverFlushbar(context, true);
-                return _buildGameWidget(context);
-              case GameState.lose:
-                _showGameOverFlushbar(context, false);
-                return _buildGameWidget(context);
-              case null:
-                return Container();
-            }
-          })),
-          Obx(() => _buildKeyboard(context)),
-        ],
+      body: Center(
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width > _widthLimit
+              ? _widthLimit
+              : null,
+          child: Column(
+            children: [
+              Expanded(child: gameController.obx((state) {
+                switch (state) {
+                  case GameState.loading:
+                    return const Center(child: CircularProgressIndicator());
+                  case GameState.running:
+                    return Obx(() => _buildGameWidget(context));
+                  case GameState.win:
+                    _showGameOverFlushbar(context, true);
+                    return _buildGameWidget(context);
+                  case GameState.lose:
+                    _showGameOverFlushbar(context, false);
+                    return _buildGameWidget(context);
+                  case null:
+                    return Container();
+                }
+              })),
+              Obx(() => _buildKeyboard(context)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -295,12 +304,15 @@ class GamePage extends StatelessWidget {
     );
   }
 
-  Widget _buildWordRow(BuildContext context, String text, {List<Color>? colors}) {
+  Widget _buildWordRow(BuildContext context, String text,
+      {List<Color>? colors}) {
     if (colors != null) {
       assert(colors.length == gameController.wordLength);
     }
-    final squareSize =
-        MediaQuery.of(context).size.width / gameController.wordLength * 0.75;
+    final width = MediaQuery.of(context).size.width > _widthLimit
+        ? _widthLimit
+        : MediaQuery.of(context).size.width;
+    final squareSize = width / gameController.wordLength - 4*2 - 1*2; // 4 - margin, 1 - border
     text = text.padRight(gameController.wordLength);
     List<Widget> squares = [];
     for (int i = 0; i < gameController.wordLength; i++) {
