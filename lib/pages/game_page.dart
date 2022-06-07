@@ -42,24 +42,24 @@ class GamePage extends StatelessWidget {
               case GameState.loading:
                 return const Center(child: CircularProgressIndicator());
               case GameState.running:
-                return Obx(() => _buildGameWidget());
+                return Obx(() => _buildGameWidget(context));
               case GameState.win:
-                _showGameOverFlushbar(true);
-                return _buildGameWidget();
+                _showGameOverFlushbar(context, true);
+                return _buildGameWidget(context);
               case GameState.lose:
-                _showGameOverFlushbar(false);
-                return _buildGameWidget();
+                _showGameOverFlushbar(context, false);
+                return _buildGameWidget(context);
               case null:
                 return Container();
             }
           })),
-          Obx(() => _buildKeyboard()),
+          Obx(() => _buildKeyboard(context)),
         ],
       ),
     );
   }
 
-  void _showGameOverFlushbar(bool win) {
+  void _showGameOverFlushbar(BuildContext context, bool win) {
     Color color = win ? Colors.yellow : Colors.blueGrey;
     Icon icon = Icon(
       win ? Icons.emoji_events_outlined : Icons.close,
@@ -103,10 +103,10 @@ class GamePage extends StatelessWidget {
       animationDuration: const Duration(milliseconds: 500),
     );
     WidgetsBinding.instance
-        .addPostFrameCallback((_) => bottomFlushbar?.show(Get.context!));
+        .addPostFrameCallback((_) => bottomFlushbar?.show(context));
   }
 
-  Widget _buildGameWidget() {
+  Widget _buildGameWidget(BuildContext context) {
     final isLightTheme = Get.find<ThemeController>().isLightTheme.value;
     final userAttempts = gameController.userAttempts.toList();
     List<Widget> rows = [];
@@ -130,11 +130,11 @@ class GamePage extends StatelessWidget {
                   : theme.redDark.withAlpha(127);
           }
         }).toList();
-        rows.add(_buildWordRow(userAttempts[i], colors: colors));
+        rows.add(_buildWordRow(context, userAttempts[i], colors: colors));
       } else if (i == userAttempts.length) {
-        rows.add(_buildWordRow(gameController.userWord.value));
+        rows.add(_buildWordRow(context, gameController.userWord.value));
       } else {
-        rows.add(_buildWordRow(''));
+        rows.add(_buildWordRow(context, ''));
       }
     }
 
@@ -146,7 +146,7 @@ class GamePage extends StatelessWidget {
     );
   }
 
-  Widget _buildKeyboard() {
+  Widget _buildKeyboard(BuildContext context) {
     return Material(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -225,7 +225,7 @@ class GamePage extends StatelessWidget {
                                         Icons.error_outline,
                                         color: Colors.red,
                                       ),
-                                    ).show(Get.context!);
+                                    ).show(context);
                                     break;
                                   case CheckWordState.notFull:
                                     Flushbar(
@@ -239,7 +239,7 @@ class GamePage extends StatelessWidget {
                                         Icons.error_outline,
                                         color: Colors.red,
                                       ),
-                                    ).show(Get.context!);
+                                    ).show(context);
                                     break;
                                 }
                               } else if (word.length <
@@ -295,12 +295,12 @@ class GamePage extends StatelessWidget {
     );
   }
 
-  Widget _buildWordRow(String text, {List<Color>? colors}) {
+  Widget _buildWordRow(BuildContext context, String text, {List<Color>? colors}) {
     if (colors != null) {
       assert(colors.length == gameController.wordLength);
     }
     final squareSize =
-        Get.mediaQuery.size.width / gameController.wordLength * 0.75;
+        MediaQuery.of(context).size.width / gameController.wordLength * 0.75;
     text = text.padRight(gameController.wordLength);
     List<Widget> squares = [];
     for (int i = 0; i < gameController.wordLength; i++) {

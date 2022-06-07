@@ -34,10 +34,10 @@ class _HomePageState extends State<HomePage> {
           children: [
             const Text('Длина слова'),
             SizedBox(
-              width: Get.mediaQuery.size.width,
+              width: MediaQuery.of(context).size.width,
               height: 100,
               child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(Get.context!).copyWith(
+                behavior: ScrollConfiguration.of(context).copyWith(
                   dragDevices: {
                     PointerDeviceKind.touch,
                     PointerDeviceKind.mouse,
