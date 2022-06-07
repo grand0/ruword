@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:ruword/controllers/theme_controller.dart';
@@ -34,14 +36,22 @@ class _HomePageState extends State<HomePage> {
             SizedBox(
               width: Get.mediaQuery.size.width,
               height: 100,
-              child: WheelChooser.integer(
-                onValueChanged: (val) => setState(() => wordLength = val),
-                maxValue: 12,
-                minValue: 4,
-                initValue: 5,
-                unSelectTextStyle: const TextStyle(color: Colors.grey),
-                magnification: 1.5,
-                horizontal: true,
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(Get.context!).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                  },
+                ),
+                child: WheelChooser.integer(
+                  onValueChanged: (val) => setState(() => wordLength = val),
+                  maxValue: 12,
+                  minValue: 4,
+                  initValue: 5,
+                  unSelectTextStyle: const TextStyle(color: Colors.grey),
+                  magnification: 1.5,
+                  horizontal: true,
+                ),
               ),
             ),
             ElevatedButton.icon(
