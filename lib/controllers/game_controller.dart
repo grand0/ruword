@@ -10,7 +10,7 @@ class GameController extends GetxController with StateMixin<GameState> {
   late final List<String> allWords;
   late final String secretWord;
   var userWord = ''.obs;
-  var userAttempts = <String>[].obs;
+  var userAttempts = <UserAttempt>[].obs;
   var currentAttempt = 0.obs;
 
   GameController({required this.wordLength}) : totalAttempts = wordLength + 1;
@@ -47,7 +47,10 @@ class GameController extends GetxController with StateMixin<GameState> {
       return CheckWordState.notExists;
     }
 
-    userAttempts.add(userWord.value);
+    userAttempts.add(UserAttempt(
+      word: userWord.value,
+      states: getLetterStatesFromWord(userWord.value),
+    ));
     if (userWord.value == secretWord) {
       change(GameState.win);
     } else {
@@ -79,7 +82,7 @@ class GameController extends GetxController with StateMixin<GameState> {
     assert(letter.length == 1);
     LetterState? state;
     for (int i = userAttempts.length - 1; i >= 0; i--) {
-      final word = userAttempts[i];
+      final word = userAttempts[i].word;
       final states = getLetterStatesFromWord(word);
       for (int j = 0; j < word.length; j++) {
         if (word[j] == letter) {
@@ -92,6 +95,13 @@ class GameController extends GetxController with StateMixin<GameState> {
     }
     return state;
   }
+}
+
+class UserAttempt {
+  final String word;
+  final List<LetterState> states;
+
+  UserAttempt({required this.word, required this.states});
 }
 
 enum GameState { loading, running, win, lose }

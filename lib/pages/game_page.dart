@@ -121,8 +121,7 @@ class GamePage extends StatelessWidget {
     List<Widget> rows = [];
     for (int i = 0; i < gameController.totalAttempts; i++) {
       if (i < userAttempts.length) {
-        final List<LetterState> states =
-            gameController.getLetterStatesFromWord(userAttempts[i]);
+        final List<LetterState> states = gameController.userAttempts[i].states;
         final List<Color> colors = states.map((state) {
           switch (state) {
             case LetterState.allRight:
@@ -139,7 +138,7 @@ class GamePage extends StatelessWidget {
                   : theme.redDark.withAlpha(127);
           }
         }).toList();
-        rows.add(_buildWordRow(context, userAttempts[i], colors: colors));
+        rows.add(_buildWordRow(context, userAttempts[i].word, colors: colors));
       } else if (i == userAttempts.length) {
         rows.add(_buildWordRow(context, gameController.userWord.value));
       } else {
@@ -312,7 +311,9 @@ class GamePage extends StatelessWidget {
     final width = MediaQuery.of(context).size.width > _widthLimit
         ? _widthLimit
         : MediaQuery.of(context).size.width;
-    final squareSize = width / gameController.wordLength - 4*2 - 1*2; // 4 - margin, 1 - border
+    final squareSize = width / gameController.wordLength -
+        4 * 2 -
+        1 * 2; // 4 - margin, 1 - border
     text = text.padRight(gameController.wordLength);
     List<Widget> squares = [];
     for (int i = 0; i < gameController.wordLength; i++) {
