@@ -11,6 +11,7 @@ class GameController extends GetxController with StateMixin<GameState> {
   late final String secretWord;
   var userWord = ''.obs;
   var userAttempts = <UserAttempt>[].obs;
+  var knownLetterStates = <String, LetterState>{}.obs;
   var currentAttempt = 0.obs;
 
   GameController({required this.wordLength}) : totalAttempts = wordLength + 1;
@@ -80,18 +81,31 @@ class GameController extends GetxController with StateMixin<GameState> {
 
   LetterState? getLetterState(String letter) {
     assert(letter.length == 1);
+
+    if (knownLetterStates.containsKey(letter)) {
+      return knownLetterStates[letter];
+    } else if (userAttempts.isEmpty ||
+        !userAttempts.last.word.contains(letter)) {
+      // there is no need to check letter if there is no way it's state
+      // could be changed
+      return null;
+    }
     LetterState? state;
-    for (int i = userAttempts.length - 1; i >= 0; i--) {
-      final word = userAttempts[i].word;
-      final states = getLetterStatesFromWord(word);
+    for (var attempt in userAttempts) {
+      final word = attempt.word;
+      final states = attempt.states;
       for (int j = 0; j < word.length; j++) {
         if (word[j] == letter) {
           state = states[j];
         }
         if (state == LetterState.allRight || state == LetterState.allWrong) {
+          knownLetterStates[letter] = state!;
           return state;
         }
       }
+    }
+    if (state != null) {
+      knownLetterStates[letter] = state;
     }
     return state;
   }
