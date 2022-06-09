@@ -138,18 +138,24 @@ class GamePage extends StatelessWidget {
                   : theme.redDark.withAlpha(127);
           }
         }).toList();
-        rows.add(_buildWordRow(context, userAttempts[i].word, colors: colors));
-      } else if (i == userAttempts.length) {
-        rows.add(_buildWordRow(context, gameController.userWord.value));
+        rows.add(_buildWordRow(context, userAttempts[i].word,
+            colors: colors,
+            animateOpacity: i == gameController.currentAttempt.value));
+      } else if (i == gameController.currentAttempt.value) {
+        rows.add(_buildWordRow(context, gameController.userWord.value,
+            animateOpacity: true));
       } else {
         rows.add(_buildWordRow(context, ''));
       }
     }
 
     return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: rows,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: rows,
+        ),
       ),
     );
   }
@@ -304,34 +310,49 @@ class GamePage extends StatelessWidget {
   }
 
   Widget _buildWordRow(BuildContext context, String text,
-      {List<Color>? colors}) {
+      {List<Color>? colors, bool animateOpacity = false}) {
     if (colors != null) {
       assert(colors.length == gameController.wordLength);
     }
     final width = MediaQuery.of(context).size.width > _widthLimit
         ? _widthLimit
         : MediaQuery.of(context).size.width;
-    final squareSize = width / gameController.wordLength -
-        4 * 2 -
-        1 * 2; // 4 - margin, 1 - border
+    final cellSize = width / gameController.wordLength * 0.75;
     text = text.padRight(gameController.wordLength);
     List<Widget> squares = [];
     for (int i = 0; i < gameController.wordLength; i++) {
-      squares.add(_buildWordSquare(text[i], squareSize, colors?[i]));
+      squares.add(_buildLetterCell(text[i], cellSize, colors?[i]));
     }
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: squares,
-    );
+    return animateOpacity
+        ? _ContainerWithAnimatedBorderOpacity(
+            borderColor: Colors.grey,
+            borderRadius: BorderRadius.circular(cellSize),
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            from: 0.5,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: squares,
+            ),
+          )
+        : Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.withOpacity(0.25)),
+              borderRadius: BorderRadius.circular(cellSize),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: squares,
+            ),
+          );
   }
 
-  Widget _buildWordSquare(String letter, double size, [Color? color]) {
+  Widget _buildLetterCell(String letter, double size, [Color? color]) {
     return Container(
       width: size,
       height: size,
-      margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
+        shape: BoxShape.circle,
         color: color,
       ),
       child: Center(
@@ -341,5 +362,88 @@ class GamePage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _ContainerWithAnimatedBorderOpacity extends StatefulWidget {
+  final bool animate;
+  final Color? color;
+  final BorderRadiusGeometry? borderRadius;
+  final Color? borderColor;
+  final EdgeInsets? padding;
+  final EdgeInsets? margin;
+  final Widget? child;
+  final double from;
+  final double to;
+
+  const _ContainerWithAnimatedBorderOpacity({
+    Key? key,
+    this.animate = true,
+    this.color,
+    this.borderRadius,
+    this.borderColor,
+    this.padding,
+    this.margin,
+    this.child,
+    this.from = 0.0,
+    this.to = 1.0,
+  }) : super(key: key);
+
+  @override
+  State<_ContainerWithAnimatedBorderOpacity> createState() =>
+      _ContainerWithAnimatedBorderOpacityState();
+}
+
+class _ContainerWithAnimatedBorderOpacityState
+    extends State<_ContainerWithAnimatedBorderOpacity>
+    with TickerProviderStateMixin {
+  AnimationController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.animate) {
+      _controller = AnimationController(
+          vsync: this, duration: const Duration(seconds: 1));
+      _controller?.addListener(() {
+        setState(() {});
+      });
+      _controller?.addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          _controller?.reverse();
+        } else if (status == AnimationStatus.dismissed) {
+          _controller?.forward();
+        }
+      });
+      _controller?.forward();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color borderColor = widget.borderColor ?? Colors.grey;
+    if (_controller != null) {
+      double value = Tween(begin: widget.from, end: widget.to).evaluate(
+          CurvedAnimation(parent: _controller!, curve: Curves.easeInOutQuad));
+      borderColor = borderColor.withOpacity(value);
+    } else {
+      borderColor = borderColor.withOpacity(widget.from);
+    }
+    return Container(
+      padding: widget.padding,
+      margin: widget.margin,
+      decoration: BoxDecoration(
+        color: widget.color,
+        border: Border.all(color: borderColor),
+        borderRadius: widget.borderRadius,
+      ),
+      child: widget.child,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
   }
 }
