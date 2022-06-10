@@ -24,7 +24,8 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             onPressed: () => Get.find<ThemeController>().switchTheme(),
-            icon: const Icon(Icons.brightness_4),
+            icon: const Icon(Icons.brightness_4_outlined),
+            tooltip: 'Сменить тему',
           ),
         ],
       ),
@@ -55,7 +56,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ElevatedButton.icon(
-              icon: const Icon(Icons.play_arrow),
+              icon: const Icon(Icons.play_arrow_outlined),
               label: const Text('Играть'),
               onPressed: () => Get.toNamed('/game', arguments: wordLength),
             ),
