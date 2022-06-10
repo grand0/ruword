@@ -1,5 +1,6 @@
 import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:ruword/controllers/game_controller.dart';
 import 'package:ruword/controllers/theme_controller.dart';
@@ -14,6 +15,7 @@ class GamePage extends StatelessWidget {
     "empty ф ы в а п р о л д ж э backspace",
     "empty empty я ч с м и т ь б ю empty done",
   ];
+  static const String _acceptedCharacters = "абвгдежзийклмнопрстуфхцчшщъыьэюя";
 
   final GameController gameController;
   Flushbar? bottomFlushbar;
@@ -38,31 +40,46 @@ class GamePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width > _widthLimit
-              ? _widthLimit
-              : null,
-          child: Column(
-            children: [
-              Expanded(child: gameController.obx((state) {
-                switch (state) {
-                  case GameState.loading:
-                    return const Center(child: CircularProgressIndicator());
-                  case GameState.running:
-                    return Obx(() => _buildGameWidget(context));
-                  case GameState.win:
-                    _showGameOverFlushbar(context, true);
-                    return _buildGameWidget(context);
-                  case GameState.lose:
-                    _showGameOverFlushbar(context, false);
-                    return _buildGameWidget(context);
-                  case null:
-                    return Container();
-                }
-              })),
-              Obx(() => _buildKeyboard(context)),
-            ],
+      body: Focus(
+        autofocus: true,
+        onKeyEvent: (node, event) {
+          if (event.character != null && event is! KeyUpEvent) {
+            _typeLetter(event.character!);
+          } else if (event.logicalKey == LogicalKeyboardKey.backspace &&
+              event is! KeyUpEvent) {
+            _removeLetter();
+          } else if (event.logicalKey == LogicalKeyboardKey.enter &&
+              event is KeyDownEvent) {
+            _checkWord(context);
+          }
+          return KeyEventResult.handled;
+        },
+        child: Center(
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width > _widthLimit
+                ? _widthLimit
+                : null,
+            child: Column(
+              children: [
+                Expanded(child: gameController.obx((state) {
+                  switch (state) {
+                    case GameState.loading:
+                      return const Center(child: CircularProgressIndicator());
+                    case GameState.running:
+                      return Obx(() => _buildGameWidget(context));
+                    case GameState.win:
+                      _showGameOverFlushbar(context, true);
+                      return _buildGameWidget(context);
+                    case GameState.lose:
+                      _showGameOverFlushbar(context, false);
+                      return _buildGameWidget(context);
+                    case null:
+                      return Container();
+                  }
+                })),
+                Obx(() => _buildKeyboard(context)),
+              ],
+            ),
           ),
         ),
       ),
@@ -240,50 +257,12 @@ class GamePage extends StatelessWidget {
                               if (gameController.state != GameState.running) {
                                 return;
                               }
-                              String word = gameController.userWord.value;
                               if (letter == 'backspace') {
-                                if (word.isNotEmpty) {
-                                  word = word.substring(0, word.length - 1);
-                                  gameController.userWord.value = word;
-                                }
+                                _removeLetter();
                               } else if (letter == 'done') {
-                                final state = gameController.checkWord();
-                                switch (state) {
-                                  case CheckWordState.ok:
-                                    break;
-                                  case CheckWordState.notExists:
-                                    Flushbar(
-                                      message: 'Такого слова нет в словаре!',
-                                      flushbarPosition: FlushbarPosition.TOP,
-                                      duration: const Duration(seconds: 2),
-                                      animationDuration:
-                                          const Duration(milliseconds: 500),
-                                      leftBarIndicatorColor: Colors.red,
-                                      icon: const Icon(
-                                        Icons.error_outline,
-                                        color: Colors.red,
-                                      ),
-                                    ).show(context);
-                                    break;
-                                  case CheckWordState.notFull:
-                                    Flushbar(
-                                      message: 'Введите слово полностью!',
-                                      flushbarPosition: FlushbarPosition.TOP,
-                                      duration: const Duration(seconds: 2),
-                                      animationDuration:
-                                          const Duration(milliseconds: 500),
-                                      leftBarIndicatorColor: Colors.red,
-                                      icon: const Icon(
-                                        Icons.error_outline,
-                                        color: Colors.red,
-                                      ),
-                                    ).show(context);
-                                    break;
-                                }
-                              } else if (word.length <
-                                  gameController.wordLength) {
-                                word += letter;
-                                gameController.userWord.value = word;
+                                _checkWord(context);
+                              } else {
+                                _typeLetter(letter);
                               }
                             }
                           : null,
@@ -386,6 +365,59 @@ class GamePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _removeLetter() {
+    String word = gameController.userWord.value;
+    if (word.isNotEmpty) {
+      word = word.substring(0, word.length - 1);
+      gameController.userWord.value = word;
+    }
+  }
+
+  void _checkWord(BuildContext context) {
+    final state = gameController.checkWord();
+    switch (state) {
+      case CheckWordState.ok:
+        break;
+      case CheckWordState.notExists:
+        Flushbar(
+          message: 'Такого слова нет в словаре!',
+          flushbarPosition: FlushbarPosition.TOP,
+          duration: const Duration(seconds: 2),
+          animationDuration: const Duration(milliseconds: 500),
+          leftBarIndicatorColor: Colors.red,
+          icon: const Icon(
+            Icons.error_outline,
+            color: Colors.red,
+          ),
+        ).show(context);
+        break;
+      case CheckWordState.notFull:
+        Flushbar(
+          message: 'Введите слово полностью!',
+          flushbarPosition: FlushbarPosition.TOP,
+          duration: const Duration(seconds: 2),
+          animationDuration: const Duration(milliseconds: 500),
+          leftBarIndicatorColor: Colors.red,
+          icon: const Icon(
+            Icons.error_outline,
+            color: Colors.red,
+          ),
+        ).show(context);
+        break;
+    }
+  }
+
+  void _typeLetter(String letter) {
+    assert(letter.length == 1);
+    if (_acceptedCharacters.contains(letter)) {
+      String word = gameController.userWord.value;
+      if (word.length < gameController.wordLength) {
+        word += letter;
+        gameController.userWord.value = word;
+      }
+    }
   }
 }
 
