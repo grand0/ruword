@@ -32,8 +32,9 @@ class GamePage extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            onPressed: () => Get.find<ThemeController>().switchTheme(),
-            icon: const Icon(Icons.brightness_4),
+            onPressed: () => _showGiveUpDialog(context),
+            icon: const Icon(Icons.flag_outlined),
+            tooltip: 'Сдаться',
           ),
         ],
       ),
@@ -66,6 +67,29 @@ class GamePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showGiveUpDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              content: const Text('Сдаться?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Отмена'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    gameController.giveUp();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Сдаться'),
+                ),
+              ],
+            ));
   }
 
   void _showGameOverFlushbar(BuildContext context, bool win) {

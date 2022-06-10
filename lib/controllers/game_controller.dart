@@ -109,6 +109,10 @@ class GameController extends GetxController with StateMixin<GameState> {
     }
     return state;
   }
+
+  void giveUp() {
+    change(GameState.lose);
+  }
 }
 
 class UserAttempt {
