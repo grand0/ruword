@@ -82,7 +82,8 @@ class GameController extends GetxController with StateMixin<GameState> {
   LetterState? getLetterState(String letter) {
     assert(letter.length == 1);
 
-    if (knownLetterStates.containsKey(letter)) {
+    if (knownLetterStates.containsKey(letter) &&
+        knownLetterStates[letter] != LetterState.wrongPlace) {
       return knownLetterStates[letter];
     } else if (userAttempts.isEmpty ||
         !userAttempts.last.word.contains(letter)) {
