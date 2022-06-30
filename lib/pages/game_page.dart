@@ -6,6 +6,8 @@ import 'package:ruword/controllers/game_controller.dart';
 import 'package:ruword/controllers/theme_controller.dart';
 import 'package:ruword/theme.dart' as theme;
 
+import '../widgets/container_with_animated_border.dart';
+
 class GamePage extends StatelessWidget {
   static const double _widthLimit = 600.0;
 
@@ -324,11 +326,16 @@ class GamePage extends StatelessWidget {
     text = text.padRight(gameController.wordLength);
     List<Widget> squares = [];
     for (int i = 0; i < gameController.wordLength; i++) {
-      squares.add(_buildLetterCell(text[i], cellSize, colors?[i]));
+      final highlightCell =
+          animateOpacity && text[i] == ' ' && (i == 0 || text[i - 1] != ' ');
+      final color = highlightCell
+          ? Theme.of(context).colorScheme.primary.withAlpha(63)
+          : colors?[i];
+      squares.add(_buildLetterCell(text[i], cellSize, color));
     }
     return animateOpacity
-        ? _ContainerWithAnimatedBorderOpacity(
-            borderColor: Colors.grey,
+        ? ContainerWithAnimatedBorderOpacity(
+            borderColor: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(cellSize),
             margin: const EdgeInsets.symmetric(vertical: 4),
             from: 0.5,
@@ -350,7 +357,8 @@ class GamePage extends StatelessWidget {
           );
   }
 
-  Widget _buildLetterCell(String letter, double size, [Color? color]) {
+  Widget _buildLetterCell(String letter, double size,
+      [Color? color]) {
     return Container(
       width: size,
       height: size,
@@ -418,88 +426,5 @@ class GamePage extends StatelessWidget {
         gameController.userWord.value = word;
       }
     }
-  }
-}
-
-class _ContainerWithAnimatedBorderOpacity extends StatefulWidget {
-  final bool animate;
-  final Color? color;
-  final BorderRadiusGeometry? borderRadius;
-  final Color? borderColor;
-  final EdgeInsets? padding;
-  final EdgeInsets? margin;
-  final Widget? child;
-  final double from;
-  final double to;
-
-  const _ContainerWithAnimatedBorderOpacity({
-    Key? key,
-    this.animate = true,
-    this.color,
-    this.borderRadius,
-    this.borderColor,
-    this.padding,
-    this.margin,
-    this.child,
-    this.from = 0.0,
-    this.to = 1.0,
-  }) : super(key: key);
-
-  @override
-  State<_ContainerWithAnimatedBorderOpacity> createState() =>
-      _ContainerWithAnimatedBorderOpacityState();
-}
-
-class _ContainerWithAnimatedBorderOpacityState
-    extends State<_ContainerWithAnimatedBorderOpacity>
-    with TickerProviderStateMixin {
-  AnimationController? _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.animate) {
-      _controller = AnimationController(
-          vsync: this, duration: const Duration(seconds: 1));
-      _controller?.addListener(() {
-        setState(() {});
-      });
-      _controller?.addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _controller?.reverse();
-        } else if (status == AnimationStatus.dismissed) {
-          _controller?.forward();
-        }
-      });
-      _controller?.forward();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    Color borderColor = widget.borderColor ?? Colors.grey;
-    if (_controller != null) {
-      double value = Tween(begin: widget.from, end: widget.to).evaluate(
-          CurvedAnimation(parent: _controller!, curve: Curves.easeInOutQuad));
-      borderColor = borderColor.withOpacity(value);
-    } else {
-      borderColor = borderColor.withOpacity(widget.from);
-    }
-    return Container(
-      padding: widget.padding,
-      margin: widget.margin,
-      decoration: BoxDecoration(
-        color: widget.color,
-        border: Border.all(color: borderColor),
-        borderRadius: widget.borderRadius,
-      ),
-      child: widget.child,
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
   }
 }
