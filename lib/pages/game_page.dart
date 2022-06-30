@@ -302,7 +302,7 @@ class GamePage extends StatelessWidget {
           color: backgroundColor,
         ),
         child: InkResponse(
-          splashFactory: InkSparkle.splashFactory,
+          splashFactory: InkRipple.splashFactory,
           radius: 16,
           onTap: onPressed,
           onLongPress: onLongPress,
