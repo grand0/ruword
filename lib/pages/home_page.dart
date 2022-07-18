@@ -2,8 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:numberpicker/numberpicker.dart';
 import 'package:ruword/controllers/theme_controller.dart';
-import 'package:wheel_chooser/wheel_chooser.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -34,26 +34,44 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('Длина слова'),
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: 100,
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(
-                  dragDevices: {
-                    PointerDeviceKind.touch,
-                    PointerDeviceKind.mouse,
-                  },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.keyboard_arrow_left),
+                  onPressed: () => setState(() {
+                    final newValue = wordLength - 1;
+                    wordLength = newValue.clamp(4, 12);
+                  }),
                 ),
-                child: WheelChooser.integer(
-                  onValueChanged: (val) => setState(() => wordLength = val),
-                  maxValue: 12,
-                  minValue: 4,
-                  initValue: 5,
-                  unSelectTextStyle: const TextStyle(color: Colors.grey),
-                  magnification: 1.5,
-                  horizontal: true,
+                ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                    },
+                  ),
+                  child: NumberPicker(
+                    value: wordLength,
+                    minValue: 4,
+                    maxValue: 12,
+                    itemHeight: 100,
+                    itemWidth: 50,
+                    itemCount: 5,
+                    axis: Axis.horizontal,
+                    onChanged: (value) => setState(() => wordLength = value),
+                    selectedTextStyle: context.textTheme.headline3
+                        ?.copyWith(color: context.theme.colorScheme.primary),
+                  ),
                 ),
-              ),
+                IconButton(
+                  icon: const Icon(Icons.keyboard_arrow_right),
+                  onPressed: () => setState(() {
+                    final newValue = wordLength + 1;
+                    wordLength = newValue.clamp(4, 12);
+                  }),
+                ),
+              ],
             ),
             ElevatedButton.icon(
               icon: const Icon(Icons.play_arrow_outlined),
