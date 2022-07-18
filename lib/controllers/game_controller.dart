@@ -88,8 +88,11 @@ class GameController extends GetxController with StateMixin<GameState> {
     } else if (userAttempts.isEmpty ||
         !userAttempts.last.word.contains(letter)) {
       // there is no need to check letter if there is no way it's state
-      // could be changed
-      return null;
+      // could be changed and at this point it either wrong place
+      // or unknown state
+      return (knownLetterStates[letter] == LetterState.wrongPlace)
+          ? LetterState.wrongPlace
+          : null;
     }
     LetterState? state;
     for (var attempt in userAttempts) {
