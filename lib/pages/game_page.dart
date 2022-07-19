@@ -1,5 +1,6 @@
 import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:ruword/controllers/game_controller.dart';
@@ -319,30 +320,38 @@ class GamePage extends StatelessWidget {
     if (colors != null) {
       assert(colors.length == gameController.wordLength);
     }
+    final secretWordLength = gameController.wordLength;
+    final inputWordLength = text.length;
     final width = MediaQuery.of(context).size.width > _widthLimit
         ? _widthLimit
         : MediaQuery.of(context).size.width;
-    final cellSize = width / gameController.wordLength * 0.75;
-    text = text.padRight(gameController.wordLength);
+    final cellSize = width / secretWordLength * 0.75;
+    text = text.padRight(secretWordLength);
     List<Widget> squares = [];
-    for (int i = 0; i < gameController.wordLength; i++) {
-      final highlightCell =
-          animateOpacity && text[i] == ' ' && (i == 0 || text[i - 1] != ' ');
-      final color = highlightCell
-          ? Theme.of(context).colorScheme.primary.withAlpha(63)
-          : colors?[i];
-      squares.add(_buildLetterCell(text[i], cellSize, color));
+    for (int i = 0; i < secretWordLength; i++) {
+      squares.add(_buildLetterCell(text[i], cellSize, colors?[i]));
     }
     return animateOpacity
-        ? ContainerWithAnimatedBorderOpacity(
-            borderColor: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(cellSize),
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            from: 0.5,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: squares,
-            ),
+        ? Stack(
+            children: [
+              ContainerWithAnimatedBorderOpacity(
+                borderColor: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(cellSize),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                from: 0.5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: squares,
+                ),
+              ),
+              _WordRowOverlay(
+                width: width,
+                cellSize: cellSize,
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                offset: inputWordLength / (secretWordLength - 1),
+                borderRadius: BorderRadius.circular(cellSize),
+              ),
+            ],
           )
         : Container(
             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -357,8 +366,7 @@ class GamePage extends StatelessWidget {
           );
   }
 
-  Widget _buildLetterCell(String letter, double size,
-      [Color? color]) {
+  Widget _buildLetterCell(String letter, double size, [Color? color]) {
     return Container(
       width: size,
       height: size,
@@ -426,5 +434,114 @@ class GamePage extends StatelessWidget {
         gameController.userWord.value = word;
       }
     }
+  }
+}
+
+// Overlay for word row with cell which can move, expand and shrink.
+// Expands when 0 > offset > 1 and shrinks when 0 <= offset <= 1
+class _WordRowOverlay extends StatefulWidget {
+  final double width;
+  final double cellSize;
+  final EdgeInsets? margin;
+  final BorderRadiusGeometry? borderRadius;
+  final double offset;
+
+  const _WordRowOverlay({
+    Key? key,
+    required this.width,
+    required this.cellSize,
+    this.margin,
+    this.borderRadius,
+    required this.offset,
+  }) : super(key: key);
+
+  @override
+  State<_WordRowOverlay> createState() => _WordRowOverlayState();
+}
+
+class _WordRowOverlayState extends State<_WordRowOverlay> {
+  late double _currentCellSize;
+  bool _keepOverflowBox = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentCellSize = widget.cellSize;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool shouldDisappear = widget.offset < 0 || widget.offset > 1;
+
+    // decide whether we should keep displaying cell in the OverflowBox to be
+    // able to expand and shrink cell outside parent container, but lose
+    // ability to control alignment
+    if (shouldDisappear && !_keepOverflowBox) {
+      setState(() {
+        _keepOverflowBox = true;
+      });
+    } else if (!shouldDisappear && (widget.offset != 1 && widget.offset != 0) && _keepOverflowBox) {
+      // don't need OverflowBox at the moment because the cell is not at the
+      // end (right edge) of container and we won't expand the cell from other
+      // place, also now we need to control the alignment
+      setState(() {
+        _keepOverflowBox = false;
+      });
+    }
+
+    // schedule callback after this frame for animation to work
+    if (shouldDisappear && _currentCellSize == widget.cellSize) {
+      SchedulerBinding.instance.addPostFrameCallback(
+          (_) => setState(() => _currentCellSize = widget.width));
+    } else if (!shouldDisappear && _currentCellSize != widget.cellSize) {
+      SchedulerBinding.instance.addPostFrameCallback(
+          (_) => setState(() => _currentCellSize = widget.cellSize));
+    }
+
+    // cell with animated size
+    Widget cell = AnimatedContainer(
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.decelerate,
+      width: _currentCellSize,
+      height: _currentCellSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Theme.of(context).colorScheme.primary.withAlpha(63),
+      ),
+    );
+
+    // _keepOverflowBox decides whether to put cell in OverflowBox or not
+    Widget child = _keepOverflowBox
+        ? OverflowBox(
+            alignment: Alignment.centerRight,
+            minWidth: 0,
+            minHeight: 0,
+            maxWidth: double.infinity,
+            maxHeight: double.infinity,
+            child: cell,
+          )
+        : cell;
+
+    return Center(
+      // parent container with animated alignment
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        width: widget.width,
+        height: widget.cellSize,
+        margin: widget.margin,
+        decoration: BoxDecoration(
+          borderRadius: widget.borderRadius,
+        ),
+        clipBehavior: Clip.hardEdge,
+        alignment: FractionalOffset(widget.offset.clamp(0, 1), 0),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.decelerate,
+          opacity: shouldDisappear ? 0.2 : 1.0,
+          child: child,
+        ),
+      ),
+    );
   }
 }
